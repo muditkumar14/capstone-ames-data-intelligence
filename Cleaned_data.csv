@@ -4,7 +4,7 @@
   "metadata": {
     "colab": {
       "provenance": [],
-      "authorship_tag": "ABX9TyOYGBp9yXKbQi8f6I6qHZ7q",
+      "authorship_tag": "ABX9TyNtuVitr7SM68Qrg5B7+d6d",
       "include_colab_link": true
     },
     "kernelspec": {
@@ -87,9 +87,9 @@
         "colab": {
           "base_uri": "https://localhost:8080/"
         },
-        "outputId": "5815a209-07c4-41a3-ab39-e65aa1462c62"
+        "outputId": "f0b544d1-6bc9-4354-ca23-7a9b3cf9af0c"
       },
-      "execution_count": null,
+      "execution_count": 2,
       "outputs": [
         {
           "output_type": "stream",
@@ -98,9 +98,11 @@
             "Warning: Looks like you're using an outdated `kaggle` version (installed: 2.0.2), please consider upgrading to the latest version (2.2.2)\n",
             "Dataset URL: https://www.kaggle.com/datasets/prevek18/ames-housing-dataset\n",
             "License(s): unknown\n",
-            "ames-housing-dataset.zip: Skipping, found more recently modified local copy (use --force to force download)\n",
+            "Downloading ames-housing-dataset.zip to /content\n",
+            "100% 185k/185k [00:00<00:00, 76.4MB/s]\n",
+            "\n",
             "Archive:  ames-housing-dataset.zip\n",
-            "replace AmesHousing.csv? [y]es, [n]o, [A]ll, [N]one, [r]ename: n\n",
+            "  inflating: AmesHousing.csv         \n",
             "   Order        PID  MS SubClass MS Zoning  Lot Frontage  Lot Area Street  \\\n",
             "0      1  526301100           20        RL         141.0     31770   Pave   \n",
             "1      2  526350040           20        RH          80.0     11622   Pave   \n",
@@ -211,10 +213,106 @@
     {
       "cell_type": "code",
       "source": [
-        "n"
+        "# ============================================================\n",
+        "# Duplicate Detection and Removal\n",
+        "# ============================================================\n",
+        "\n",
+        "# Count duplicate rows\n",
+        "duplicate_count = df.duplicated().sum()\n",
+        "\n",
+        "print(\"=\" * 60)\n",
+        "print(\"DUPLICATE DETECTION\")\n",
+        "print(\"=\" * 60)\n",
+        "print(f\"Total duplicate rows before removal: {duplicate_count}\")\n",
+        "\n",
+        "# Calculate null percentage BEFORE removing duplicates\n",
+        "null_before = ((df.isnull().sum() / len(df)) * 100).round(2)\n",
+        "\n",
+        "# Remove duplicate rows\n",
+        "df = df.drop_duplicates()\n",
+        "\n",
+        "# Calculate null percentage AFTER removing duplicates\n",
+        "null_after = ((df.isnull().sum() / len(df)) * 100).round(2)\n",
+        "\n",
+        "print(f\"\\nRows removed: {duplicate_count}\")\n",
+        "print(f\"Dataset shape after duplicate removal: {df.shape}\")\n",
+        "\n",
+        "print(f\"\\nDuplicate rows remaining: {df.duplicated().sum()}\")\n",
+        "\n",
+        "# Compare null percentages\n",
+        "null_comparison = pd.DataFrame({\n",
+        "    \"Before (%)\": null_before,\n",
+        "    \"After (%)\": null_after,\n",
+        "    \"Change (%)\": (null_after - null_before).round(2)\n",
+        "})\n",
+        "\n",
+        "print(\"\\n\" + \"=\" * 60)\n",
+        "print(\"NULL PERCENTAGE COMPARISON\")\n",
+        "print(\"=\" * 60)\n",
+        "print(null_comparison)\n",
+        "\n",
+        "# Show only columns where the percentage changed\n",
+        "changed = null_comparison[null_comparison[\"Change (%)\"] != 0]\n",
+        "\n",
+        "print(\"\\nColumns whose null percentage changed after duplicate removal:\")\n",
+        "\n",
+        "if changed.empty:\n",
+        "    print(\"No change in null percentages after removing duplicates.\")\n",
+        "else:\n",
+        "    print(changed)"
       ],
       "metadata": {
-        "id": "SLgG3M65_Uk-"
+        "id": "SLgG3M65_Uk-",
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "outputId": "f859ced7-7b5d-4c4d-c60c-c1c24d73982c"
+      },
+      "execution_count": 5,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "============================================================\n",
+            "DUPLICATE DETECTION\n",
+            "============================================================\n",
+            "Total duplicate rows before removal: 0\n",
+            "\n",
+            "Rows removed: 0\n",
+            "Dataset shape after duplicate removal: (2930, 82)\n",
+            "\n",
+            "Duplicate rows remaining: 0\n",
+            "\n",
+            "============================================================\n",
+            "NULL PERCENTAGE COMPARISON\n",
+            "============================================================\n",
+            "                Before (%)  After (%)  Change (%)\n",
+            "Order                  0.0        0.0         0.0\n",
+            "PID                    0.0        0.0         0.0\n",
+            "MS SubClass            0.0        0.0         0.0\n",
+            "MS Zoning              0.0        0.0         0.0\n",
+            "Lot Frontage           0.0        0.0         0.0\n",
+            "...                    ...        ...         ...\n",
+            "Mo Sold                0.0        0.0         0.0\n",
+            "Yr Sold                0.0        0.0         0.0\n",
+            "Sale Type              0.0        0.0         0.0\n",
+            "Sale Condition         0.0        0.0         0.0\n",
+            "SalePrice              0.0        0.0         0.0\n",
+            "\n",
+            "[82 rows x 3 columns]\n",
+            "\n",
+            "Columns whose null percentage changed after duplicate removal:\n",
+            "No change in null percentages after removing duplicates.\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [],
+      "metadata": {
+        "id": "b_wGZWJ4HlcN"
       },
       "execution_count": null,
       "outputs": []
