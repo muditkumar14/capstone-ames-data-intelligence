@@ -2,105 +2,75 @@
 
 ## Objective
 
-The objective of this part of the capstone project is to build and evaluate supervised machine learning models using the cleaned Ames Housing dataset prepared in Part 1.
+The objective of this part of the project was to build supervised machine learning models using the cleaned Ames Housing dataset created in Part 1.
 
-Two predictive tasks were performed:
-
-- Regression: Predict the continuous house sale price (`SalePrice`).
-- Binary Classification: Predict whether a house sells above or below the median sale price.
-
-The workflow includes feature engineering, categorical encoding, train-test splitting, leak-free feature scaling, regression modeling, classification modeling, decision-threshold analysis, regularization experiments, and bootstrap confidence interval estimation.
-
-The cleaned dataset (`cleaned_data.csv`) generated in Part 1 was used throughout this section.
+Both **regression** and **classification** problems were explored. Regression models were used to predict the actual sale price of a house, while classification models were used to predict whether a house belongs to the above-median or below-median price category.
 
 ---
 
-# Feature Matrix and Target Variables
+# Dataset
 
-The cleaned dataset generated in Part 1 was loaded using `pd.read_csv()`.
+The cleaned dataset generated in Part 1 (`cleaned_data.csv`) was used for model development.
 
-Two target variables were defined.
-
-## Regression Target
-
-The continuous target variable is:
-
-**SalePrice**
-
-## Classification Target
-
-A binary target variable was created using the median sale price.
-
-- SalePrice > Median → 1
-- SalePrice ≤ Median → 0
-
-This resulted in a nearly balanced dataset.
-
-The final feature matrix contained **260 encoded features** after preprocessing.
+- **Features:** All columns except `SalePrice`
+- **Regression Target:** `SalePrice`
+- **Classification Target:** Houses with sale price above the median were assigned class **1**, and houses below or equal to the median were assigned class **0**.
 
 ---
 
-# Categorical Feature Encoding
+# Data Preparation
 
-The dataset contains both ordinal and nominal categorical variables.
+Before training the models, the dataset was preprocessed.
 
-## Ordinal Encoding
+### Feature Encoding
 
-The **Lot Shape** column has a natural order:
+Categorical variables were converted into numerical values.
 
-IR3 < IR2 < IR1 < Reg
+Two different encoding techniques were used:
 
-Therefore, label encoding was applied while preserving the natural ordering.
+- **Ordinal Encoding**
+  - Lot Shape
 
-## One-Hot Encoding
+- **One-Hot Encoding**
+  - All remaining categorical features
 
-All remaining nominal categorical variables were encoded using **One-Hot Encoding** with `drop_first=True`.
-
-One-Hot Encoding prevents the model from assuming an incorrect ordinal relationship between categories while also reducing multicollinearity.
+This allowed machine learning models to process categorical information correctly.
 
 ---
 
-# Train-Test Split and Feature Scaling
+# Train-Test Split
 
 The dataset was divided into:
 
-- 80% Training
-- 20% Testing
+- **80% Training Data**
+- **20% Testing Data**
 
-using `train_test_split()` with `random_state=42`.
+The same split was used for both regression and classification models.
 
-Feature scaling was performed using **StandardScaler**.
+For the classification task, stratified sampling was applied to maintain the class distribution in both training and testing datasets.
 
-The scaler was fitted **only on the training dataset** before transforming both the training and testing datasets.
+---
 
-This prevents **data leakage**, since statistics from the test dataset are never used during model training.
+# Feature Scaling
+
+StandardScaler was applied to normalize the numerical features.
+
+The scaler was fitted only on the training data and then applied to both the training and testing datasets to prevent data leakage.
 
 ---
 
 # Linear Regression
 
-A Linear Regression model was trained using the standardized training data.
+A Linear Regression model was trained to predict house sale prices.
 
-## Performance
+The model was evaluated using:
 
-- Mean Squared Error (MSE): **833,314,119.55**
-- R² Score: **0.8961**
+- Mean Squared Error (MSE)
+- R² Score
 
-The model explains approximately **89.61%** of the variation in house prices.
+The feature coefficients were also analyzed to identify which variables had the strongest influence on house prices.
 
-## Most Important Features
-
-The three features with the largest absolute coefficients were:
-
-1. **BsmtFin SF 1**
-2. **Bsmt Unf SF**
-3. **Total Bsmt SF**
-
-These features had the strongest influence on predicting house prices.
-
-A large **positive coefficient** indicates that increasing the standardized feature increases the predicted sale price.
-
-A large **negative coefficient** indicates that increasing the feature decreases the predicted sale price.
+The three most important features were reported based on the absolute coefficient values.
 
 ---
 
@@ -108,122 +78,117 @@ A large **negative coefficient** indicates that increasing the feature decreases
 
 A Ridge Regression model was trained using **alpha = 1.0**.
 
-## Model Comparison
+The model was evaluated using the same metrics as Linear Regression.
 
-| Model | MSE | R² Score |
-|------|-------------:|------:|
-| Linear Regression | 833,314,119.55 | 0.8961 |
-| Ridge Regression | 828,518,427.08 | 0.8967 |
+The performance of both regression models was compared using:
 
-The Ridge Regression model achieved a slightly lower Mean Squared Error and a slightly higher R² score than the standard Linear Regression model.
+- Mean Squared Error
+- R² Score
 
-The **alpha** parameter controls the strength of L2 regularization. Increasing alpha shrinks model coefficients more aggressively, helping reduce overfitting.
+This comparison helped understand the effect of L2 regularization on model performance.
 
 ---
 
 # Logistic Regression
 
-A Logistic Regression model was trained to classify houses into above-median and below-median price groups.
+The regression problem was converted into a binary classification problem by comparing each house price with the median sale price.
 
-The dataset was already balanced.
+The Logistic Regression model was trained using the scaled features.
 
-- Class 0: **50.6%**
-- Class 1: **49.4%**
+The class distribution was checked before training.
 
-Therefore, no imbalance handling technique was required.
+If class imbalance had been detected, the model would have used `class_weight="balanced"`.
 
-## Model Performance
+---
 
-- Accuracy: **0.9317**
-- Precision: **(Use the value printed by your notebook)**
-- Recall: **(Use the value printed by your notebook)**
-- F1 Score: **(Use the value printed by your notebook)**
+# Classification Evaluation
 
-The confusion matrix and classification report indicate that the model correctly classified the majority of houses into the correct price category.
+The classification model was evaluated using:
+
+- Accuracy
+- Precision
+- Recall
+- F1 Score
+- Confusion Matrix
+- Classification Report
+
+These metrics provide a detailed understanding of model performance beyond simple accuracy.
 
 ---
 
 # ROC Curve and AUC
 
-The Receiver Operating Characteristic (ROC) curve was generated to evaluate classifier performance across different thresholds.
+The Receiver Operating Characteristic (ROC) curve was generated to evaluate classification performance across different decision thresholds.
 
-The model achieved:
+The Area Under the Curve (AUC) score was also calculated.
 
-**AUC = 0.9791**
-
-An AUC close to **1.0** indicates excellent ability to distinguish between houses priced above and below the median.
-
-## Precision Formula
-
-Precision = TP / (TP + FP)
-
-Precision measures the proportion of predicted positive observations that are actually positive.
-
-## Recall Formula
-
-Recall = TP / (TP + FN)
-
-Recall measures the proportion of actual positive observations that were correctly identified.
-
-For this housing classification task, **Precision** is slightly more important because incorrectly classifying a lower-priced property as a premium property could lead to unrealistic price estimates.
+A higher AUC indicates better classification performance.
 
 ---
 
-# Decision Threshold Sensitivity Analysis
+# Decision Threshold Analysis
 
-Five decision thresholds were evaluated.
+Instead of using the default probability threshold of **0.50**, multiple thresholds were evaluated:
 
-| Threshold | Precision | Recall | F1 Score |
-|----------:|----------:|-------:|---------:|
-| 0.30 | 0.8978 | 0.9508 | 0.9236 |
-| 0.40 | 0.9135 | 0.9344 | 0.9238 |
-| 0.50 | **0.9431** | **0.9246** | **0.9338** |
-| 0.60 | 0.9519 | 0.9082 | 0.9295 |
-| 0.70 | 0.9611 | 0.8918 | 0.9252 |
+- 0.30
+- 0.40
+- 0.50
+- 0.60
+- 0.70
 
-The highest F1 Score was achieved at the default threshold of **0.50**.
+For each threshold, the following metrics were calculated:
 
-Increasing the threshold improves Precision while reducing Recall because fewer observations are classified as positive.
+- Precision
+- Recall
+- F1 Score
+
+The threshold with the highest F1 Score was identified as the best decision threshold.
 
 ---
 
-# Logistic Regression Regularization
+# Regularization Experiment
 
-A second Logistic Regression model was trained using **C = 0.01**, which applies stronger L2 regularization.
+A second Logistic Regression model was trained using stronger regularization (**C = 0.01**).
 
-| Model | Precision | Recall | AUC |
-|------|----------:|-------:|-----:|
-| Logistic Regression (C = 1.0) | **(Use baseline Precision)** | **(Use baseline Recall)** | **0.9791** |
-| Logistic Regression (C = 0.01) | **0.9567** | **0.9410** | **0.9906** |
+The performance of both models was compared using:
 
-The parameter **C** controls the inverse strength of regularization.
+- Precision
+- Recall
+- ROC-AUC
 
-A smaller value of **C** applies stronger regularization, shrinking model coefficients more aggressively.
-
-For this dataset, stronger regularization slightly improved the AUC score.
+This experiment demonstrated the effect of stronger regularization on classification performance.
 
 ---
 
 # Bootstrap Confidence Interval
 
-A bootstrap experiment with **500 samples** was performed to compare the AUC of the two Logistic Regression models.
+Bootstrap sampling was performed using **500 resamples**.
 
-## Results
+For each bootstrap sample, the difference in ROC-AUC between the two Logistic Regression models was calculated.
 
-- Mean AUC Difference: **−0.0117**
-- 2.5th Percentile: **−0.0190**
-- 97.5th Percentile: **−0.0056**
+Finally, a **95% confidence interval** was computed.
 
-The **95% confidence interval excludes zero**, indicating that the observed performance difference between the two models is statistically reliable rather than due to random sampling.
+This analysis helps determine whether the difference between the two models is statistically significant.
+
+---
+
+# Key Learnings
+
+During this part of the project, I learned how to:
+
+- Prepare data for supervised learning.
+- Encode categorical variables.
+- Apply feature scaling correctly.
+- Build Linear Regression and Ridge Regression models.
+- Train Logistic Regression models.
+- Evaluate regression and classification performance.
+- Interpret ROC curves and AUC scores.
+- Analyze different classification thresholds.
+- Understand the impact of regularization.
+- Estimate model uncertainty using bootstrap confidence intervals.
 
 ---
 
 # Conclusion
 
-This part of the capstone project successfully developed supervised machine learning models for both regression and classification using the Ames Housing dataset.
-
-Linear Regression and Ridge Regression achieved strong predictive performance for estimating house prices, while Logistic Regression demonstrated excellent classification capability with an AUC of **0.9791**.
-
-Additional analyses including decision-threshold evaluation, regularization experiments, and bootstrap confidence intervals provided deeper insights into model robustness and predictive performance.
-
-The supervised learning pipeline developed in this section provides the foundation for the ensemble learning and machine learning pipeline implementation in **Part 3**.
+In this part of the project, I successfully developed both regression and classification models using the cleaned housing dataset. Different preprocessing techniques, evaluation metrics, and validation methods were applied to compare model performance. The experiments provided a better understanding of supervised machine learning and prepared the dataset for the more advanced ensemble learning techniques implemented in Part 3.
