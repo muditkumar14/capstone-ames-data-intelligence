@@ -1,301 +1,238 @@
-# 🏠 Ames Housing Data Intelligence – End-to-End Machine Learning Capstone
+# Part 4 – LLM Powered Prediction Explanation
 
-## Overview
+## Objective
 
-This repository contains an end-to-end Machine Learning capstone project built using the **Ames Housing Dataset**. The project demonstrates the complete machine learning workflow, beginning with data preprocessing and exploratory analysis, progressing through supervised learning models, and concluding with advanced ensemble techniques, hyperparameter tuning, and model deployment.
+The objective of this part of the project was to integrate the trained machine learning model with a Large Language Model (LLM) to generate simple and human-readable explanations for house price predictions.
 
-The primary objective is to predict house prices and classify houses based on whether their sale price is above or below the median while following machine learning best practices.
+The machine learning model predicts whether a house belongs to the **Above Median Price** or **Below Median Price** category. These predictions are then passed to an LLM through the OpenRouter API, which generates structured explanations in JSON format.
 
-This project was developed using **Python** and the **Scikit-learn** ecosystem.
-
----
-
-# 📂 Repository Structure
-
-```
-capstone-ames-data-intelligence/
-│
-├── Part-1/
-│   ├── Part1.ipynb
-│   └── README.md
-│
-├── Part-2/
-│   ├── Part2.ipynb
-│   └── README.md
-│
-├── Part-3/
-│   ├── Part3.ipynb
-│   ├── README.md
-│   └── best_model.pkl
-│
-├── cleaned_data.csv
-├── requirements.txt
-└── README.md
-```
+This part demonstrates how traditional machine learning and generative AI can be combined to create more interpretable prediction systems.
 
 ---
 
-# 📊 Dataset
+# Dataset and Model
 
-The project uses the **Ames Housing Dataset**, which contains detailed information about residential properties sold in Ames, Iowa.
+This notebook uses the artifacts generated in the previous parts of the project.
 
-The dataset includes:
-
-- Property characteristics
-- Construction details
-- Neighborhood information
-- Basement and garage information
-- Lot dimensions
-- House quality ratings
-- Sale Price
-
-The dataset was cleaned and preprocessed before training machine learning models.
-
----
-
-# 🚀 Project Workflow
-
-```
-Raw Dataset
-      │
-      ▼
-Data Cleaning
-      │
-      ▼
-Feature Engineering
-      │
-      ▼
-Exploratory Data Analysis
-      │
-      ▼
-Feature Encoding
-      │
-      ▼
-Train-Test Split
-      │
-      ▼
-Feature Scaling
-      │
-      ▼
-Supervised Learning
-      │
-      ▼
-Ensemble Learning
-      │
-      ▼
-Hyperparameter Tuning
-      │
-      ▼
-Model Evaluation
-      │
-      ▼
-Model Serialization
-```
-
----
-
-# 📘 Part 1 – Data Preprocessing
-
-The first stage of the project focuses on preparing the dataset for machine learning.
-
-### Topics Covered
-
-- Loading the dataset
-- Exploratory Data Analysis (EDA)
-- Missing value handling
-- Duplicate detection
-- Outlier analysis
-- Feature engineering
-- Ordinal encoding
-- One-Hot Encoding
-- Dataset cleaning
-- Exporting the cleaned dataset
-
-### Output
+### Files Used
 
 - `cleaned_data.csv`
+- `best_model.pkl`
+- `feature_columns.pkl`
+
+The cleaned dataset was created in **Part 1**, while the trained Random Forest model and feature column list were generated in **Part 3**.
 
 ---
 
-# 📗 Part 2 – Supervised Machine Learning
+# Project Workflow
 
-This section introduces supervised learning algorithms for both regression and classification tasks.
+The complete workflow followed in this notebook is shown below.
 
-### Regression Models
-
-- Linear Regression
-- Ridge Regression
-
-### Classification Model
-
-- Logistic Regression
-
-### Additional Analysis
-
-- Feature Scaling
-- ROC Curve
-- AUC Score
-- Decision Threshold Analysis
-- Logistic Regression Regularization
-- Bootstrap Confidence Interval
-
----
-
-# 📙 Part 3 – Advanced Modeling
-
-The final section focuses on advanced machine learning techniques and model optimization.
-
-### Models Implemented
-
-- Decision Tree
-- Controlled Decision Tree
-- Random Forest
-- Gradient Boosting
-
-### Advanced Topics
-
-- Feature Importance
-- Feature Ablation Study
-- Cross Validation
-- Machine Learning Pipeline
-- GridSearchCV
-- Hyperparameter Tuning
-- Manual Learning Curve
-- Model Serialization
-- Model Reload & Prediction
+```
+Load Dataset
+        ↓
+Load Trained Model
+        ↓
+Load Feature Columns
+        ↓
+Configure OpenRouter API
+        ↓
+Create Reusable LLM Function
+        ↓
+Test API Connection
+        ↓
+Implement PII Guardrail
+        ↓
+Create JSON Schema
+        ↓
+Prepare Features
+        ↓
+Generate Model Predictions
+        ↓
+Generate LLM Explanations
+        ↓
+Validate JSON Output
+        ↓
+Temperature Comparison
+        ↓
+Generate Prediction Summary
+```
 
 ---
 
-# 🛠 Technologies Used
+# Loading the Model
 
-### Programming Language
+The trained machine learning pipeline was loaded using **Joblib**.
+
+The saved feature column list was also loaded to ensure that the prediction data follows the exact feature order used during training.
+
+This prevents feature mismatch errors during inference.
+
+---
+
+# OpenRouter API Integration
+
+The OpenRouter API was used to access the language model.
+
+The API key was securely loaded from **Google Colab Secrets**.
+
+A reusable function named `call_llm()` was created to:
+
+- Send prompts to the LLM
+- Handle API requests
+- Handle timeout exceptions
+- Handle unexpected API responses
+- Return the generated explanation
+
+A simple API test was performed before running the complete workflow to verify that the connection was working correctly.
+
+---
+
+# PII Guardrail
+
+Before sending prompts to the LLM, a basic guardrail was implemented using Regular Expressions.
+
+The guardrail checks for:
+
+- Email addresses
+- Phone numbers
+
+This demonstrates how sensitive information can be detected before interacting with an LLM.
+
+---
+
+# JSON Schema Validation
+
+The language model was instructed to return responses only in JSON format.
+
+Each response contains the following fields:
+
+- Prediction Label
+- Confidence Level
+- Top Reason
+- Second Reason
+- Next Step
+
+The generated responses were validated using the **jsonschema** library to ensure that every response follows the required structure.
+
+---
+
+# Feature Preparation
+
+The same preprocessing steps used during model training were applied before generating predictions.
+
+This includes:
+
+- Encoding categorical variables
+- Aligning features using `feature_columns.pkl`
+
+Using the saved feature list ensures that the trained model receives the correct input format during inference.
+
+---
+
+# Machine Learning Predictions
+
+Three sample houses were selected from the processed dataset.
+
+For each sample, the trained model generated:
+
+- Prediction
+- Prediction Probability
+- Confidence Score
+
+The confidence score was categorized as:
+
+- High
+- Medium
+- Low
+
+based on the predicted probability.
+
+---
+
+# LLM Generated Explanations
+
+For every prediction, the following information was provided to the language model:
+
+- Predicted class
+- Confidence level
+- Prediction probability
+- Important house features
+
+The LLM generated structured explanations describing why the model predicted that particular class.
+
+Example observations generated by the model include:
+
+- Large living area contributes to a higher predicted price.
+- Better overall quality increases property value.
+- Desirable neighborhoods positively influence the prediction.
+- Features such as finished basements and larger garages increase the estimated value.
+
+The responses were returned in structured JSON format for easy validation and processing.
+
+---
+
+# Temperature Comparison
+
+The same prediction was generated using two different temperature settings.
+
+- Temperature = **0.0**
+- Temperature = **0.7**
+
+This experiment demonstrates how temperature affects the consistency and creativity of LLM responses.
+
+---
+
+# Prediction Summary
+
+After validating all JSON responses, the results were converted into a summary table containing:
+
+- House
+- Prediction
+- Confidence
+- Top Reason
+- Second Reason
+- Next Step
+
+The final summary was exported as:
+
+```
+prediction_summary.csv
+```
+
+---
+
+# Technologies Used
 
 - Python
-
-### Libraries
-
 - Pandas
 - NumPy
-- Matplotlib
 - Scikit-learn
 - Joblib
+- Requests
+- JSON Schema
+- Regular Expressions
+- OpenRouter API
+- GPT-4.1 Mini
 
 ---
 
-# 📈 Machine Learning Techniques
+# Key Learnings
 
-- Data Cleaning
-- Feature Engineering
-- Feature Encoding
-- Standardization
-- Linear Regression
-- Ridge Regression
-- Logistic Regression
-- Decision Tree
-- Random Forest
-- Gradient Boosting
-- Cross Validation
-- Hyperparameter Tuning
-- Pipeline
-- Feature Importance
-- Model Serialization
+Through this part of the project, I learned how to:
+
+- Integrate a machine learning model with a Large Language Model.
+- Work with REST APIs.
+- Design reusable API functions.
+- Create prompts for structured JSON output.
+- Validate LLM responses using JSON Schema.
+- Implement basic guardrails for sensitive information.
+- Handle API errors gracefully.
+- Compare LLM outputs using different temperature values.
+- Generate human-readable explanations for machine learning predictions.
 
 ---
 
-# 📁 Repository Contents
+# Conclusion
 
-| File | Description |
-|------|-------------|
-| Part-1 | Data preprocessing and cleaning |
-| Part-2 | Supervised Machine Learning |
-| Part-3 | Advanced Modeling and Ensemble Learning |
-| cleaned_data.csv | Cleaned dataset used for Parts 2 and 3 |
-| best_model.pkl | Serialized best-performing machine learning pipeline |
-| requirements.txt | Project dependencies |
-
----
-
-# ▶️ How to Run
-
-### 1. Clone the repository
-
-```bash
-git clone https://github.com/muditkumar14/capstone-ames-data-intelligence.git
-```
-
-### 2. Navigate into the project
-
-```bash
-cd capstone-ames-data-intelligence
-```
-
-### 3. Install dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### 4. Open the notebooks
-
-Run the notebooks in the following order:
-
-1. Part-1
-2. Part-2
-3. Part-3
-
----
-
-# 📊 Key Highlights
-
-✔ Complete end-to-end Machine Learning workflow
-
-✔ Clean and well-documented code
-
-✔ Ensemble Learning implementation
-
-✔ Hyperparameter Optimization using GridSearchCV
-
-✔ Feature Importance Analysis
-
-✔ Manual Learning Curve Analysis
-
-✔ Cross-Validation
-
-✔ Reproducible Scikit-learn Pipeline
-
-✔ Model Serialization using Joblib
-
----
-
-# 🎯 Learning Outcomes
-
-Through this project, I gained practical experience with:
-
-- Data preprocessing and feature engineering
-- Regression and classification models
-- Ensemble learning methods
-- Model evaluation techniques
-- Hyperparameter tuning
-- Machine learning pipelines
-- Cross-validation
-- Model deployment preparation
-
----
-
-# 🔮 Future Improvements
-
-Possible future enhancements include:
-
-- XGBoost and LightGBM implementation
-- SHAP explainability
-- Interactive Streamlit dashboard
-- Automated model monitoring
-- REST API deployment using FastAPI
-
----
-
-# 👨‍💻 Author
-
-**Mudit Kumar Singh**
-
-This repository was created as part of a Machine Learning capstone project to demonstrate practical skills in data preprocessing, supervised learning, ensemble methods, model optimization, and reproducible machine learning workflows.
+In this part of the project, I successfully integrated a trained machine learning model with a Large Language Model to generate structured explanations for house price predictions. The workflow combines machine learning, prompt engineering, API integration, JSON validation, and guardrails to create an end-to-end explainable AI pipeline. This demonstrates how predictive models and LLMs can work together to make machine learning results easier to understand.
