@@ -1,370 +1,227 @@
-# Part 3 – Advanced Modeling: Ensembles, Hyperparameter Tuning and Machine Learning Pipeline
+# Part 3 – Advanced Modeling: Ensemble Learning, Hyperparameter Tuning and Machine Learning Pipeline
 
-## Overview
+## Objective
 
-In this part of the project, I built advanced machine learning models to improve prediction performance and create a complete, production-ready workflow.
+The objective of this part of the project was to improve the performance of the machine learning models developed in Part 2 by using advanced ensemble learning techniques. Different tree-based models were trained and compared, hyperparameters were optimized using GridSearchCV, and the final model was saved for reuse in the next part of the project.
 
-Unlike Part 2, which focused on basic supervised learning models, this section explores ensemble learning techniques, compares multiple classifiers using cross-validation, performs hyperparameter tuning using GridSearchCV, and saves the best-performing model for future use.
-
-The complete workflow follows a structured machine learning pipeline, making the model reproducible, reusable, and suitable for deployment.
-
----
-
-# Objectives
-
-The main objectives of this part were to:
-
-- Build Decision Tree and Ensemble models
-- Compare multiple classification algorithms
-- Evaluate models using ROC-AUC and Cross Validation
-- Tune Random Forest using GridSearchCV
-- Analyze feature importance
-- Perform feature ablation
-- Study model performance using a manual learning curve
-- Save the best model using Joblib
-- Reload the saved model and make predictions
+The cleaned dataset generated in Part 1 was used throughout this notebook.
 
 ---
 
 # Dataset
 
-The project uses the cleaned Ames Housing dataset prepared in **Part 1**.
+The project uses the cleaned Ames Housing dataset.
 
-The classification target was defined as:
+- **Input Features:** All columns except `SalePrice`
+- **Target Variable:** Houses with sale prices above the median were assigned class **1**, while the remaining houses were assigned class **0**.
 
-- **1** → House price above the median
-- **0** → House price equal to or below the median
-
-The same preprocessing pipeline from Part 2 was reused throughout this project.
+Before training the models, categorical variables were encoded and the features were standardized using `StandardScaler`.
 
 ---
 
-# Workflow
+# Decision Tree Baseline
 
-```text
-Cleaned Dataset
-        │
-        ▼
-Feature Encoding
-        │
-        ▼
-Train-Test Split
-        │
-        ▼
-Standard Scaling
-        │
-        ▼
-Decision Tree Models
-        │
-        ▼
-Random Forest
-        │
-        ▼
-Gradient Boosting
-        │
-        ▼
-Feature Importance
-        │
-        ▼
-Feature Ablation
-        │
-        ▼
-Cross Validation
-        │
-        ▼
-GridSearchCV
-        │
-        ▼
-Learning Curve
-        │
-        ▼
-Save Best Model
-        │
-        ▼
-Reload & Predict
-```
+A Decision Tree classifier was first trained using the default parameters.
+
+The training and testing accuracy were compared to check whether the model was overfitting.
+
+Since the training accuracy was much higher than the testing accuracy, the model showed signs of overfitting.
 
 ---
 
-# 1. Decision Tree Baseline
+# Controlled Decision Tree
 
-A default `DecisionTreeClassifier` was trained using the scaled training dataset.
+To reduce overfitting, another Decision Tree model was trained using:
 
-## Performance
+- Maximum Depth = 5
+- Minimum Samples Split = 20
 
-- **Training Accuracy:** **1.0000**
-- **Testing Accuracy:** **0.8788**
+The performance of both Decision Tree models was compared using:
 
-The model achieved perfect training accuracy but significantly lower testing accuracy, indicating clear overfitting.
+- Training Accuracy
+- Testing Accuracy
+- ROC-AUC Score
 
-Decision Trees are considered **high-variance models** because they greedily split the training data until it is perfectly classified, which often causes them to memorize the training data instead of learning generalized patterns.
-
----
-
-# 2. Controlled Decision Tree
-
-A second Decision Tree model was trained using:
-
-- `max_depth = 5`
-- `min_samples_split = 20`
-
-## Performance
-
-- **Training Accuracy:** **0.9270**
-- **Testing Accuracy:** **0.8976**
-- **Test ROC-AUC:** **0.9573**
-
-Compared to the default tree, the controlled model reduced overfitting and achieved better generalization.
-
-### Hyperparameter Explanation
-
-### max_depth
-
-Limits the maximum depth of the tree, reducing variance and helping prevent overfitting.
-
-### min_samples_split
-
-Prevents nodes containing only a few observations from being split, reducing sensitivity to noisy data.
-
-The controlled tree reduced the train-test performance gap from **0.1212** to **0.0294**, demonstrating improved generalization.
+Reducing the tree depth improved the model's ability to generalize to unseen data.
 
 ---
 
-# 3. Gini vs Entropy
+# Gini vs Entropy Comparison
 
-Two Decision Tree models were compared using different impurity measures.
+Two Decision Tree models were trained using different splitting criteria.
 
 - Gini Impurity
 - Entropy
 
-### Gini Formula
+The testing accuracy of both models was compared to determine whether one criterion performed better than the other.
 
-\[
-Gini = 1-\sum p_i^2
-\]
-
-### Entropy Formula
-
-\[
-Entropy = -\sum p_i\log_2(p_i)
-\]
-
-A node with **Gini = 0** means every observation belongs to the same class.
-
-Both impurity measures produced very similar performance, with Entropy performing slightly better.
+Both approaches produced very similar results.
 
 ---
 
-# 4. Random Forest Classifier
+# Random Forest Classifier
 
-Random Forest combines multiple Decision Trees into a single ensemble model.
-
-The model was trained using:
+A Random Forest model was trained using:
 
 - 100 Trees
 - Maximum Depth = 10
-- Random State = 42
 
-## Performance
+The model was evaluated using:
 
-- **Training Accuracy:** **0.9893**
-- **Testing Accuracy:** **0.9283**
-- **ROC-AUC:** **0.9806**
+- Training Accuracy
+- Testing Accuracy
+- ROC-AUC Score
 
-Random Forest significantly reduced overfitting while improving predictive performance compared to a single Decision Tree.
+Random Forest performed better than a single Decision Tree because it combines predictions from multiple trees and reduces overfitting.
 
 ---
 
 # Feature Importance
 
-Random Forest calculates feature importance by measuring the average reduction in Gini Impurity contributed by each feature across all trees.
+Feature importance scores were extracted from the Random Forest model.
 
-Unlike Linear Regression coefficients, feature importance values measure predictive contribution rather than indicating positive or negative relationships.
+The five most important features were identified and visualized using a bar chart.
 
-The five most important features identified were:
-
-- Full Bath
-- Gr Liv Area
-- Overall Qual
-- Garage Area
-- Garage Cars
-
-These variables contributed most to predicting whether a house belonged to the above-median price category.
+This analysis helps understand which variables contribute the most to the prediction.
 
 ---
 
-# Bagging (Bootstrap Aggregation)
+# Gradient Boosting
 
-Random Forest uses **Bagging**.
-
-Each Decision Tree is trained using a random bootstrap sample of the training data.
-
-At every split, only a random subset of features is considered.
-
-This randomness reduces variance, improves robustness, and makes Random Forest significantly more stable than a single Decision Tree.
-
----
-
-# 5. Gradient Boosting
-
-Gradient Boosting builds Decision Trees sequentially, where each new tree attempts to correct errors made by previous trees.
-
-The model was trained using:
+A Gradient Boosting classifier was trained using:
 
 - 100 Estimators
 - Learning Rate = 0.1
 
-## Performance
+Unlike Random Forest, Gradient Boosting builds trees sequentially, where each tree tries to correct the mistakes made by the previous one.
 
-- **Training Accuracy:** **0.9770**
-- **Testing Accuracy:** **0.9266**
-- **ROC-AUC:** **0.9822**
+The model was evaluated using:
 
-Gradient Boosting achieved the highest overall predictive performance among all evaluated models.
-
----
-
-# 6. Feature Ablation Study
-
-The five least important features identified by the Random Forest model were removed.
-
-A second Random Forest model was trained using the reduced feature set.
-
-## Results
-
-| Model | ROC-AUC |
-|------|---------:|
-| Full Random Forest | **0.9806** |
-| Reduced Random Forest | **0.9814** |
-
-The reduced model achieved a slightly higher ROC-AUC score, indicating that the removed features contributed very little useful information and may have introduced minor noise.
-
-Removing these features simplifies the model while maintaining predictive performance.
+- Training Accuracy
+- Testing Accuracy
+- ROC-AUC Score
 
 ---
 
-# 7. Cross Validation
+# Feature Ablation Study
 
-Five-fold Stratified Cross Validation was performed using **ROC-AUC**.
+The five least important features identified by the Random Forest model were removed from the dataset.
 
-| Model | Mean ROC-AUC | Standard Deviation |
-|------|-------------:|-------------------:|
-| Logistic Regression | **0.9648** | **0.0051** |
-| Decision Tree | **0.9406** | **0.0060** |
-| Random Forest | **0.9814** | **0.0034** |
-| Gradient Boosting | **0.9825** | **0.0053** |
+A new Random Forest model was trained using the reduced feature set.
 
-Cross Validation provides a more reliable estimate of model performance because every observation is used for both training and validation across multiple folds.
+The ROC-AUC scores of both models were compared to understand whether those features contributed meaningful information.
 
 ---
 
-# 8. Hyperparameter Tuning
+# Cross Validation
 
-GridSearchCV was used to identify the best Random Forest configuration.
+Five-fold Stratified Cross Validation was performed for four different models:
 
-Pipeline components:
+- Logistic Regression
+- Decision Tree
+- Random Forest
+- Gradient Boosting
 
-- SimpleImputer(strategy="median")
-- StandardScaler()
-- RandomForestClassifier(random_state=42)
+The mean ROC-AUC and standard deviation were calculated for each model.
 
-Parameter grid:
-
-- n_estimators = [50, 100, 200]
-- max_depth = [5, 10, None]
-- min_samples_leaf = [1, 5]
-
-Parameter combinations evaluated:
-
-**18**
-
-Total models trained using 5-fold Cross Validation:
-
-**90**
-
-## Best Parameters
-
-```python
-{
-    'randomforestclassifier__max_depth': None,
-    'randomforestclassifier__min_samples_leaf': 1,
-    'randomforestclassifier__n_estimators': 200
-}
-```
-
-### Best Cross Validation ROC-AUC
-
-**0.9822**
-
-### Grid Search vs Randomized Search
-
-Grid Search evaluates every possible parameter combination and guarantees the best solution within the specified search space.
-
-Randomized Search evaluates only randomly selected combinations, making it computationally faster for larger search spaces.
+Cross-validation provides a more reliable estimate of model performance because every observation is used for both training and validation.
 
 ---
 
-# 9. Manual Learning Curve
+# Machine Learning Pipeline
 
-The best pipeline was retrained using progressively larger portions of the training data.
+A Scikit-learn Pipeline was created using:
 
-| Training Fraction | Training ROC-AUC | Testing ROC-AUC |
-|------------------:|-----------------:|----------------:|
-| 20% | **1.0000** | **0.9730** |
-| 40% | **1.0000** | **0.9776** |
-| 60% | **1.0000** | **0.9809** |
-| 80% | **1.0000** | **0.9810** |
-| 100% | **1.0000** | **0.9806** |
+- SimpleImputer
+- StandardScaler
+- RandomForestClassifier
 
-The testing ROC-AUC improved steadily as more training data became available before stabilizing near the full dataset.
-
-This suggests the model has reached a point where additional data provides only marginal improvement, indicating that performance is beginning to plateau.
+Using a pipeline keeps the preprocessing and model training steps together, making the workflow easier to reuse.
 
 ---
 
-# 10. Model Serialization
+# Hyperparameter Tuning
+
+GridSearchCV was used to find the best Random Forest hyperparameters.
+
+The following parameters were tuned:
+
+- Number of Trees
+- Maximum Depth
+- Minimum Samples per Leaf
+
+The best parameter combination was selected using five-fold cross-validation with ROC-AUC as the evaluation metric.
+
+---
+
+# Manual Learning Curve
+
+The best pipeline was trained using different portions of the training dataset.
+
+Training fractions:
+
+- 20%
+- 40%
+- 60%
+- 80%
+- 100%
+
+For each fraction, both the training ROC-AUC and testing ROC-AUC were calculated.
+
+This analysis helps understand whether the model benefits from additional training data.
+
+---
+
+# Model Serialization
 
 The best-performing pipeline was saved using Joblib.
 
-```python
-joblib.dump(best_pipeline, "best_model.pkl")
-```
+Two files were generated:
 
-The saved model was successfully reloaded.
+- `best_model.pkl`
+- `feature_columns.pkl`
 
-```python
-loaded_model = joblib.load("best_model.pkl")
-```
+The saved model was then loaded again and tested on sample data to confirm that it can be reused without retraining.
 
-Predictions were generated on two unseen samples to verify that the serialized model can be reused without retraining.
+The feature column file ensures that future predictions use exactly the same feature order as the training data.
 
 ---
 
 # Final Model Comparison
 
-| Model | 5-Fold Mean ROC-AUC | Std ROC-AUC | Test ROC-AUC |
-|------|--------------------:|------------:|-------------:|
-| Logistic Regression | **0.9648** | **0.0051** | **0.9654** |
-| Decision Tree | **0.9406** | **0.0060** | **0.9573** |
-| Random Forest | **0.9814** | **0.0034** | **0.9806** |
-| Gradient Boosting | **0.9825** | **0.0053** | **0.9822** |
+The following models were compared:
+
+- Logistic Regression
+- Decision Tree
+- Random Forest
+- Gradient Boosting
+
+The comparison includes:
+
+- Five-Fold Mean ROC-AUC
+- Five-Fold Standard Deviation
+- Test ROC-AUC
+
+This makes it easy to identify the best-performing model.
 
 ---
 
-# Final Recommendation
+# Key Learnings
 
-Among all evaluated models, **Gradient Boosting Classifier** achieved the strongest overall performance with the highest cross-validation ROC-AUC and the best test-set ROC-AUC.
+During this part of the project, I learned how to:
 
-Although Random Forest also performed exceptionally well, Gradient Boosting demonstrated slightly better generalization while maintaining high predictive accuracy.
-
-For deployment, Gradient Boosting is recommended because it provides the best balance between performance, robustness, and reliability.
+- Build ensemble learning models.
+- Compare different Decision Tree configurations.
+- Understand Gini and Entropy criteria.
+- Use Random Forest feature importance.
+- Perform feature ablation.
+- Apply cross-validation correctly.
+- Tune model hyperparameters using GridSearchCV.
+- Build reusable machine learning pipelines.
+- Save and reload trained models using Joblib.
 
 ---
 
 # Conclusion
 
-This part of the project successfully implemented advanced ensemble learning techniques, systematic hyperparameter tuning, feature importance analysis, feature ablation, cross-validation, manual learning curve analysis, and model serialization.
-
-The final machine learning pipeline is fully reproducible, reusable, and suitable for real-world predictive applications.
-
-Overall, ensemble learning significantly outperformed a single Decision Tree, demonstrating the effectiveness of combining multiple models to improve predictive performance and reduce overfitting.
+In this part of the project, I successfully implemented several advanced machine learning techniques to improve prediction performance. Ensemble models such as Random Forest and Gradient Boosting produced better results than a single Decision Tree. Cross-validation and GridSearchCV helped identify the most reliable model, while model serialization made it possible to reuse the trained pipeline in Part 4 without retraining.
